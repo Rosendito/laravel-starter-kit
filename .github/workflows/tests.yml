@@ -23,10 +23,18 @@ jobs:
           tools: composer:v2
           coverage: xdebug
 
-      - name: Setup Node
+      - name: Resolve Node version from package.json (Volta)
+        id: node-version
+        run: echo "version=$(jq -r '.volta.node' package.json)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node (Volta pinned from package.json)
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '${{ steps.node-version.outputs.version }}'
+          cache: pnpm
+
+      - name: Enable Corepack (pnpm)
+        run: corepack enable
 
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
@@ -38,14 +46,14 @@ jobs:
         run: php artisan key:generate
 
       - name: Install Node Dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build Assets
-        run: npm run build
+        run: pnpm run build
 
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(npm list @playwright/test --depth=0 --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p \"require('playwright/package.json').version\")" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright Browsers
         uses: actions/cache@v4
@@ -56,11 +64,11 @@ jobs:
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Install Playwright System Dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps
+        run: pnpm exec playwright install-deps
 
       - name: Rector Cache
         uses: actions/cache@v4
