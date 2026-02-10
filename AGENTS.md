@@ -1,7 +1,3 @@
----
-alwaysApply: true
----
-
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -425,17 +421,6 @@ Authenticate before testing panel functionality. Filament uses Livewire, so use 
 - File visibility is `private` by default. Use `->visibility('public')` for public access.
 - `Grid`, `Section`, and `Fieldset` no longer span all columns by default.
   </laravel-boost-guidelines>
-
-## Database schema-first project note
-
-This Laravel project is **schema-first**.
-
-- **Source of truth**: `database/schema/mysql-schema.sql` (many tables are created from SQL).
-- **NEVER add new columns to the MySQL schema file**: Do not add new columns (or other schema changes that should ship) directly to `database/schema/mysql-schema.sql`. All MySQL schema changes MUST be made via Laravel migrations.
-- **Why**: `database/schema/mysql-schema.sql` reflects the production application's schema baseline. If you add columns there without migrations, the application will never replicate those changes because migrations are the mechanism executed to apply database updates.
-- **SQLite exception only**: You may adjust `database/schema/sqlite-schema.sql` when it is missing columns that exist in the MySQL schema (SQLite schema can drift / have omissions), but do NOT use SQLite edits as a way to introduce new features or columns.
-- **Migrations may be missing**: Do not assume every referenced model/table has a corresponding Laravel migration file.
-- **Do not load schema files entirely**: The schema can be very large; avoid reading the full schema file into memory unless absolutely required. Prefer targeted, small excerpts.
 
 ## Testing scope note (speed)
 
