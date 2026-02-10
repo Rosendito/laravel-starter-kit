@@ -22,8 +22,6 @@ pest()->extend(TestCase::class)
     })
     ->in('Browser', 'Feature', 'Unit');
 
-expect()->extend('toBeOne', fn () => $this->toBe(1));
-
 pest()->presets()->custom('strictWithLaravelExceptions', function (array $namespaces): array {
     $expectations = [];
 
