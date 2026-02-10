@@ -30,11 +30,24 @@ jobs:
       - name: Setup Node (Volta pinned from package.json)
         uses: actions/setup-node@v4
         with:
-          node-version: '${{ steps.node-version.outputs.version }}'
-          cache: pnpm
+          node-version: "${{ steps.node-version.outputs.version }}"
 
       - name: Enable Corepack (pnpm)
-        run: corepack enable
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
@@ -46,14 +59,14 @@ jobs:
         run: php artisan key:generate
 
       - name: Install Node Dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build Assets
         run: pnpm run build
 
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(node -p \"require('playwright/package.json').version\")" >> $GITHUB_OUTPUT
+        run: node -e "console.log('version=' + require('playwright/package.json').version)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Playwright Browsers
         uses: actions/cache@v4
